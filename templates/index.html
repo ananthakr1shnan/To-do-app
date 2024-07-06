@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>To-Do List App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(to bottom, #4CAF50, #2196F3);   
+        }
+        #app {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align:center;
+            color: #2c3e50;
+        }
+        h2 {
+            color: #2c3e50;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background-color: #ecf0f1;
+            margin-bottom: 10px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .item-display {
+            display: inline-block;
+            width: calc(100% - 100px); /* Adjust as needed */
+        }
+        .edit-form {
+            display: none;
+            margin-top: 10px;
+        }
+        .btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        .btn-edit {
+            background-color: #3498db;
+            color: white;
+        }
+        .btn-delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .btn-update {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .btn-cancel {
+            background-color: #95a5a6;
+            color: white;
+        }
+        .btn-add {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .btn:hover {
+            opacity: 0.8;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        textarea {
+            min-height: 100px;
+        }
+        label {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>Welcome to the To-Do List App</h1>
+        
+        <h2>Current Items:</h2>
+        <ul id="itemList">
+            {% for item in items %}
+            <li>
+                <div class="item-display">
+                    <span>{{ item.name }}</span><br>
+                    <span>{{ item.description }}</span>
+                    <div>
+                        <button onclick="showEditForm({{ item.id }})" class="btn btn-edit">Edit</button>
+                        <form action="/items/{{ item.id }}" method="POST" style="display: inline;">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <input type="submit" value="Delete" class="btn btn-delete">
+                        </form>
+                    </div>
+                </div>
+                <form id="edit-form-{{ item.id }}" class="edit-form" onsubmit="updateItem(event, {{ item.id }})">
+                    <label for="edit-name-{{ item.id }}">Name:</label>
+                    <input type="text" id="edit-name-{{ item.id }}" name="name" value="{{ item.name }}" required><br>
+                    <label for="edit-description-{{ item.id }}">Description:</label><br>
+                    <textarea id="edit-description-{{ item.id }}" name="description" required>{{ item.description }}</textarea><br>
+                    <button type="submit" class="btn btn-update">Update</button>
+                    <button type="button" onclick="hideEditForm({{ item.id }})" class="btn btn-cancel">Cancel</button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+        
+        <h2>Add New Item:</h2>
+        <form action="/items" method="POST" id="addItemForm">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required><br><br>
+            <label for="description">Description:</label><br>
+            <textarea id="description" name="description" required></textarea><br><br>
+            <input type="submit" value="Add Item" class="btn btn-add">
+        </form>
+    </div>
+
+    <script>
+        function showEditForm(itemId) {
+            document.querySelector(`#edit-form-${itemId}`).style.display = 'block';
+            document.querySelector(`#edit-form-${itemId}`).previousElementSibling.style.display = 'none';
+        }
+        function hideEditForm(itemId) {
+            document.querySelector(`#edit-form-${itemId}`).style.display = 'none';
+            document.querySelector(`#edit-form-${itemId}`).previousElementSibling.style.display = 'block';
+        }
+        function updateItem(event, itemId) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            fetch(`/items/${itemId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(Object.fromEntries(formData))
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                location.reload();
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>
